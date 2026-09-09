@@ -2,6 +2,9 @@
 
 A centralized, version-controlled repository to manage and track **steering files**, guidelines, and configuration templates for AI coding agents (such as Kiro, Google Antigravity, Gemini CLI, Cursor, and Claude Code).
 
+* **Repository**: [https://github.com/d-j-h/AIAgent](https://github.com/d-j-h/AIAgent)
+* **Default Branch**: `main`
+
 ---
 
 ## 🎯 What are Steering Files?
@@ -69,17 +72,11 @@ To make these steering rules apply across all projects on your machine:
 
 ---
 
-## 🔗 GitHub Remote & Synchronization
+## 🔗 Local & Remote Synchronization
 
-This repository is initialized on the `main` branch with the remote configured to:
-`git@github.com:d-j-h/AIAgent.git`
+To sync this repository across machines (e.g. on your local laptop):
 
-### Pushing to GitHub
-
-1. Ensure the repository `AIAgent` exists under your account on GitHub (`d-j-h`):
-   * **Via Web UI**: Create a new repository at [github.com/new](https://github.com/new) named `AIAgent`.
-   * **Via GitHub CLI (`gh`)**: Run `gh auth login` and then `gh repo create AIAgent --public --source=. --remote=origin --push`.
-2. Push commits using your configured SSH key:
-   ```bash
-   git push -u origin main
-   ```
+```bash
+cd ~/git
+git clone git@github.com:d-j-h/AIAgent.git
+```
