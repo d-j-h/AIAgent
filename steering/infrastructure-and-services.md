@@ -46,3 +46,21 @@ description: Infrastructure context, host services, and bot runtime configuratio
    - Update `MATRIX_HOMESERVER` in `/var/lib/ministack/scratch/matrix/bot/ai.env` and `/var/lib/ministack/scratch/matrix/bot/github.env`.
    - Recreate the containers with the updated `MATRIX_HOMESERVER` env var (preserving persistent volume mounts).
    - Check logs to ensure `Loaded state` and `Starting Matrix sync loop` appear without connection errors, and verify the `since` token in `bot_state.json` advances.
+
+## Internal DNS & NetBox IPAM Architecture
+- **BIND9 Authoritative Nameserver (`bind-primary`)**:
+  - Container: `bind-primary` listening on `0.0.0.0:53` on host `BOLSRV09P` (`10.0.10.181`).
+  - Authoritative for: `hadho.me`, `srv.hadho.me`, `lan.hadho.me`, `hyphu.hadho.me`, `iot.hadho.me`, `10.0.10.in-addr.arpa`.
+  - Authoritative NS records: `ns1.hadho.me` (`10.0.10.181`), `ns2.hadho.me` (`10.0.10.205`).
+  - Zone files directory: `/var/lib/ministack/netbox/dns/zones/` (mounted ro in `bind-primary`).
+- **NetBox IPAM & Sync Scripts (`/var/lib/ministack/netbox/scripts/`)**:
+  - NetBox runs locally on `http://127.0.0.1:8000/api`.
+  - NetBox record ID=30: `10.0.10.181/24` with `dns_name: bolsrv09p.srv`.
+  - `netbox-dns-sync.py`: Generates zone files from NetBox IPAM and reloads BIND. Runs every 5 min via `happyloaf` user crontab.
+  - `netbox-dhcp-sync.py`: Syncs DHCP leases from OPNsense router (`10.0.10.1`) into NetBox IPAM. Runs every 5 min via crontab.
+- **Gatus Status Monitoring (`/gatus`)**:
+  - Container: `/gatus` (`twinproduction/gatus:latest`) on bridge network, exposing port 18080.
+  - Mounts: `/var/lib/ministack/monitoring/config.yaml:/config/config.yaml:ro` and `/var/lib/ministack/monitoring:/data`.
+  - Monitored MiniStack endpoints: `http://BOLSRV09P.srv.hadho.me:4566` (API and S3) and `http://BOLSRV09P.srv.hadho.me:8080/api/health` (stackport).
+  - Note: Bridge network containers do not resolve internal BIND zones via DHCP nameservers; `/gatus` container requires `ExtraHosts: ["BOLSRV09P.srv.hadho.me:10.0.10.181", "bolsrv09p.srv.hadho.me:10.0.10.181"]` configured in `HostConfig`.
+
