@@ -168,6 +168,15 @@ description: Infrastructure context, host services, and bot runtime configuratio
       -H "Content-Type: application/json" \
       -d '{"group": "/my-app", "stream": "node-1", "events": [{"timestamp": 1789127000000, "message": "event 1"}]}'
     ```
+- **Caddy Edge Proxy Log Streaming**:
+  - Edge Caddy on `BOLVM01P` (`10.0.10.205`) streams JSON access and operational logs over TCP to `10.0.10.181:8092`.
+  - Configured via Caddy Admin API (`http://10.0.10.205:2019`):
+    - Logger: `logging.logs.caddy_edge` (`writer: {output: "net", address: "10.0.10.181:8092"}`).
+    - Server access logger: `apps.http.servers.srv0.logs.default_logger_name: "caddy_edge"`.
+  - Log Groups:
+    - `/caddy/access`: Streams segregated by requested hostname (e.g. `secrets.hadho.me`, `dev.hadho.me`, `sec.hadho.me`, preview hosts).
+    - `/caddy/server`: Stream `caddy-edge` for operational, TLS, and reverse proxy events.
+
 
 
 
