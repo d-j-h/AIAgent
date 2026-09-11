@@ -142,5 +142,33 @@ description: Infrastructure context, host services, and bot runtime configuratio
 - **Dashboards**:
   - `Gatus-Overview`: Preconfigured CloudWatch dashboard tracking core infrastructure availability and latency metrics.
 
+## CloudWatch Logs Ingestion & Container Shipping (`cloudwatch-log-shipper`)
+- **Logs Web UI**: `https://secrets.hadho.me/resources/logs`
+  - StackPort provides a full CloudWatch Logs browser with real-time log event streaming, timestamp filtering, and text/regex search across all groups and streams.
+- **Log Shipper Service (`cloudwatch-log-shipper`)**:
+  - Runs as an ECS task on MiniStack (`cluster: hyphu-development`, `taskDefinition: cloudwatch-log-shipper:1`).
+  - Source directory: `/home/coder/.gemini/antigravity/scratch/cloudwatch-log-shipper/`.
+  - Mounts `/var/run/docker.sock` to tail stdout/stderr from all running Docker containers.
+- **Log Group Hierarchy**:
+  - Docker Containers: `/docker/{container_name}` (e.g. `/docker/matrix-ai-bot`, `/docker/gatus`, `/docker/stackport`, `/docker/bind-primary`, `/docker/ministack`, etc.).
+  - System Logs: `/system/{service_name}` (e.g. `/system/netbox-dns-sync`, `/system/netbox-dhcp-sync`).
+  - Custom Ingestion: Arbitrary custom namespaces (e.g. `/custom/{app}`).
+- **HTTP Ingestion API (Port 8090)**:
+  - Accessible locally from containers at `http://172.17.0.1:8090` and from host/LAN at `http://10.0.10.181:8090`.
+  - Health check: `GET http://10.0.10.181:8090/health`
+  - Single log ingestion:
+    ```bash
+    curl -X POST http://10.0.10.181:8090/log \
+      -H "Content-Type: application/json" \
+      -d '{"group": "/my-app", "stream": "node-1", "message": "Transaction processed"}'
+    ```
+  - Batch log ingestion:
+    ```bash
+    curl -X POST http://10.0.10.181:8090/logs \
+      -H "Content-Type: application/json" \
+      -d '{"group": "/my-app", "stream": "node-1", "events": [{"timestamp": 1789127000000, "message": "event 1"}]}'
+    ```
+
+
 
 
