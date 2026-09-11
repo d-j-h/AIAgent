@@ -121,4 +121,26 @@ description: Infrastructure context, host services, and bot runtime configuratio
   secret = json.loads(sm.get_secret_value(SecretId="hyphu/<service>")["SecretString"])
   ```
 
+## CloudWatch Monitoring & Alarms (MiniStack & Gatus Integration)
+- **Monitoring Web UI**: `https://secrets.hadho.me/resources/monitoring`
+  - StackPort exposes the CloudWatch `monitoring` service console displaying all active Metric Alarms, states (`OK`, `ALARM`, `INSUFFICIENT_DATA`), and Dashboards.
+- **Bridge Service (`gatus-cloudwatch-bridge`)**:
+  - Runs as an ECS task in cluster `hyphu-development` on MiniStack (`taskDefinition: gatus-cloudwatch-bridge:1`).
+  - Source directory: `/home/coder/.gemini/antigravity/scratch/gatus-cloudwatch-bridge/` (mounted to `/app` in container).
+  - Polls Gatus API (`http://172.17.0.1:18080/api/v1/endpoints/statuses`) every 30 seconds.
+- **CloudWatch Metric Architecture**:
+  - **Namespace**: `Gatus`
+  - **Metrics**:
+    - `UptimeStatus`: 1.0 (UP / healthy) or 0.0 (DOWN / failed).
+    - `LatencyMs`: Endpoint response time in milliseconds.
+    - `HTTPStatus`: Target HTTP response code (e.g. 200, 401, 502).
+  - **Dimensions**: `Endpoint`, `Group` (e.g. `ministack`, `previews`).
+- **Metric Alarms**:
+  - Naming convention: `Gatus-{group}-{endpoint}-Health`.
+  - Trigger condition: `UptimeStatus < 1.0` for 1 evaluation period (60s).
+  - Alarm state is synchronized dynamically in real-time, providing immediate visual feedback in the StackPort Monitoring UI and alerting on service degradation.
+- **Dashboards**:
+  - `Gatus-Overview`: Preconfigured CloudWatch dashboard tracking core infrastructure availability and latency metrics.
+
+
 
