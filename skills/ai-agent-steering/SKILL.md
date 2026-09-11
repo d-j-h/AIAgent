@@ -23,6 +23,7 @@ Refer to these steering files for specific domains:
 - **Code Standards & Commits**: [`~/git/AIAgent/steering/code-standards.md`](file:///home/coder/git/AIAgent/steering/code-standards.md)
 - **Agent Behavior**: [`~/git/AIAgent/steering/agent-behavior.md`](file:///home/coder/git/AIAgent/steering/agent-behavior.md)
 - **Architecture & Security**: [`~/git/AIAgent/steering/architecture-and-security.md`](file:///home/coder/git/AIAgent/steering/architecture-and-security.md)
+- **Infrastructure & Services**: [`~/git/AIAgent/steering/infrastructure-and-services.md`](file:///home/coder/git/AIAgent/steering/infrastructure-and-services.md)
 
 ## Updating Steering Rules
 To pull the latest steering changes and re-link configurations:

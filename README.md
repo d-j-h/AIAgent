@@ -28,7 +28,8 @@ Steering files are markdown documents that provide persistent, project-specific 
 │   ├── core-principles.md          # Fundamental rules and safety guidelines
 │   ├── code-standards.md           # Typing, linting, error handling, commits
 │   ├── agent-behavior.md           # Planning, execution discipline, communication
-│   └── architecture-and-security.md# Architecture patterns and security rules
+│   ├── architecture-and-security.md# Architecture patterns and security rules
+│   └── infrastructure-and-services.md# Host environment, services, and bot ops
 ├── templates/                      # Agent-specific starter templates
 │   ├── kiro/                       # Kiro specification templates
 │   │   ├── tech.md                 # Tech stack and build constraints
