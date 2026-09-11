@@ -14,9 +14,25 @@ description: Infrastructure context, host services, and bot runtime configuratio
 
 ## Matrix & Synapse Architecture
 - **Homeserver**: Synapse (`happyloaf.com`)
-  - Runs in container `matrix-hh-synapse-1` on network `matrix-hh_matrix`.
-  - Exposed on host port **`8018`** (`0.0.0.0:8018`).
+  - Project directory: `/var/lib/ministack/scratch/matrix-happyloaf`
+  - Runs in container `matrix-hh-synapse-1` on network `matrix-happyloaf_default`.
+  - Exposed on host port **`8018`** (`0.0.0.0:8018`), federation on **`8458`** (`0.0.0.0:8458`).
   - Reachable from containers via host IP `http://10.0.10.181:8018` or Docker default bridge gateway `http://172.17.0.1:8018`.
+- **Application Services & Bridges**:
+  - **IRC Bridge (`heisenbridge`)**:
+    - Container: `matrix-hh-heisenbridge-1` (`hif1/heisenbridge:latest`).
+    - Port: `9898` (connected to `http://synapse:8008`).
+    - Config: `/var/lib/ministack/scratch/matrix-happyloaf/heisenbridge/registration.yaml`.
+    - User namespace: `@irc_.*:happyloaf.com`.
+  - **XMPP Bridge (`matrix-bifrost`) & Server (`prosody`)**:
+    - Bifrost container: `matrix-hh-matrix-bifrost-1` (`matrixdotorg/matrix-bifrost:latest`).
+    - Prosody container: `matrix-hh-prosody-1` (`prosody/prosody:latest`) acting as the XMPP server with an external component listener on port `5347`.
+    - Bifrost appservice port: `5000`, media proxy port: `11111`.
+    - Config: `/var/lib/ministack/scratch/matrix-happyloaf/matrix-bifrost/config.yaml`, `registration.yaml`, and `signingkey.jwk` (HS512).
+    - Database: PostgreSQL database `bifrost` on `matrix-hh-postgres-1`.
+    - User namespace: `@_bifrost_.*:happyloaf.com`, room alias namespace: `#bifrost_.*:happyloaf.com`.
+  - **Mautrix Bridges**:
+    - Slack (`matrix-hh-mautrix-slack-1`), Discord (`matrix-hh-mautrix-discord-1`), Signal (`matrix-hh-mautrix-signal-1`), WhatsApp (`matrix-hh-mautrix-whatsapp-1`).
 - **Matrix Bots**:
   - **HyphuBot** (`matrix-ai-bot`):
     - User ID: `@hyphubot:happyloaf.com`
