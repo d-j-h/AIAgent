@@ -64,3 +64,45 @@ description: Infrastructure context, host services, and bot runtime configuratio
   - Monitored MiniStack endpoints: `http://BOLSRV09P.srv.hadho.me:4566` (API and S3) and `http://BOLSRV09P.srv.hadho.me:8080/api/health` (stackport).
   - Note: Bridge network containers do not resolve internal BIND zones via DHCP nameservers; `/gatus` container requires `ExtraHosts: ["BOLSRV09P.srv.hadho.me:10.0.10.181", "bolsrv09p.srv.hadho.me:10.0.10.181"]` configured in `HostConfig`.
 
+## Central Secrets Store (AWS Secrets Manager & StackPort)
+- **Secrets Management UI**: `https://secrets.hadho.me/`
+  - Routes via Cloudflare -> Edge Caddy (`10.0.10.205`) -> Authelia SSO (`sec.hadho.me`) -> StackPort upstream (`10.0.10.181:8080`).
+  - Underlying container: `/stackport` (`davireis/stackport:latest`) on host `BOLSRV09P`.
+  - Config mount: `/var/lib/ministack/stackport/endpoints.json` (mounted to `/data/endpoints.json` in container).
+  - Configured endpoint: `bolsrv09p` -> `http://10.0.10.181:4566` (active & default).
+  - Required container `HostConfig`: `ExtraHosts: ["bolsrv09p.srv.hadho.me:10.0.10.181", "BOLSRV09P.srv.hadho.me:10.0.10.181"]`.
+- **Secrets Manager API Endpoints**:
+  - From Docker containers (default bridge gateway): `http://172.17.0.1:4566`
+  - From Host / LAN: `http://10.0.10.181:4566`
+  - Region: `us-east-1`
+- **Naming Convention & Secret Hierarchy**:
+  - Standard prefix: `hyphu/<service>` or `hyphu/<domain>/<service>`.
+  - Multi-attribute credentials must be stored as JSON strings containing key-value pairs.
+- **Active Secrets Inventory**:
+  - `hyphu/openrouter`: OpenRouter API key for LLM integrations.
+  - `hyphu/netbox`: NetBox superuser API token, secret key, DB credentials.
+  - `hyphu/duplicati`: Duplicati web/API management credentials.
+  - `hyphu/matrix/ai-bot`: Matrix user password (`@hyphubot:happyloaf.com`) & OpenRouter API key.
+  - `hyphu/matrix/github-bot`: Matrix user password (`@githubbot:happyloaf.com`) & GitHub personal access token.
+  - `hyphu/monitoring`: Gatus tokens (GitHub token, Home Assistant token, Ntfy token).
+  - `hyphu/development/recovery`: Dev recovery tokens.
+- **Programmatic Secret Access Pattern (Python / boto3)**:
+  ```python
+  import json, os, boto3
+
+  # In containers where ECS metadata credential env vars are injected, unset them or supply dummy creds
+  os.environ.pop("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI", None)
+  os.environ.pop("AWS_CONTAINER_CREDENTIALS_FULL_URI", None)
+
+  sm = boto3.client(
+      "secretsmanager",
+      endpoint_url="http://172.17.0.1:4566",
+      region_name="us-east-1",
+      aws_access_key_id="test",
+      aws_secret_access_key="test",
+  )
+
+  secret = json.loads(sm.get_secret_value(SecretId="hyphu/<service>")["SecretString"])
+  ```
+
+
