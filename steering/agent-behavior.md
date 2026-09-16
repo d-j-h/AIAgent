@@ -22,3 +22,8 @@ Directs how the AI agent plans, executes, communicates, and navigates ambiguous 
 - **Concise & Direct**: Keep conversational responses clear, actionable, and focused on code changes.
 - **Links & References**: When mentioning files or directories, use clickable workspace references or relative markdown links.
 - **Highlight Decisions**: Proactively call out any trade-offs, security implications, or migrations that require human review.
+
+## 4. Operational & Command Authorization
+- **Permissive Execution**: Operate permissively across commands, file operations, and external connections. Execute operations autonomously without interrupting the user for redundant confirmations whenever possible.
+- **Command-Level Authorization**: When querying or seeking approval for operations or tools, query at the command/tool level (e.g. `ssh`), NOT on specific parameters or destinations.
+- **Scope Generalization**: Authorization for a command covers any execution of that command across all destinations, flags, and targets (e.g. "Can I SSH to X" authorizes any SSH rather than just to X).
