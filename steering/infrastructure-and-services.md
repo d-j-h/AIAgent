@@ -102,6 +102,7 @@ description: Infrastructure context, host services, and bot runtime configuratio
   - `hyphu/matrix/github-bot`: Matrix user password (`@githubbot:happyloaf.com`) & GitHub personal access token.
   - `hyphu/monitoring`: Gatus tokens (GitHub token, Home Assistant token, Ntfy token).
   - `hyphu/development/recovery`: Dev recovery tokens.
+  - `hyphu/cloudflare`: Cloudflare API token and `hadho.me` zone ID for automated DNS-01 ACME challenge resolution and DNS management.
 - **Programmatic Secret Access Pattern (Python / boto3)**:
   ```python
   import json, os, boto3
@@ -176,6 +177,29 @@ description: Infrastructure context, host services, and bot runtime configuratio
   - Log Groups:
     - `/caddy/access`: Streams segregated by requested hostname (e.g. `secrets.hadho.me`, `dev.hadho.me`, `sec.hadho.me`, preview hosts).
     - `/caddy/server`: Stream `caddy-edge` for operational, TLS, and reverse proxy events.
+  - **Dynamic Secrets Ingestion**:
+    - Pre-launch fetcher `/data/docker/caddy/fetch-secrets.sh` (mode `0700`) retrieves `hyphu/cloudflare` from MiniStack Secrets Manager (`http://10.0.10.181:4566`).
+    - Writes `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ZONE_ID` to runtime file `/data/docker/caddy/.env.secrets` (mode `0600`).
+    - Consumed by `docker-compose.yml` via `services.caddy.env_file: [ .env.secrets ]`, eliminating plaintext credentials from compose manifests.
+
+## Plane Project & Documentation Management (`doc.hadho.me`)
+- **Web UI & Ingress**: `https://doc.hadho.me/`
+  - Ingress route: Cloudflare -> Edge Caddy (`10.0.10.205`) -> Authelia SSO (`sec.hadho.me`) -> Plane upstream (`http://BOLSRV09P.srv.hadho.me:8095`).
+  - Auth policy: Web UI protected by Authelia SSO (`sec.hadho.me`); API requests with `X-Api-Key` or `Authorization` headers bypass Authelia forward-auth.
+- **Runtime & Deployment Architecture**:
+  - Primary host: `BOLSRV09P` (`10.0.10.181`).
+  - Orchestration: MiniStack ECS cluster `plane-cluster` (task definition `plane-app`).
+  - Container: `makeplane/plane-aio-community:v1.4.2` (`plane-aio`), exposing port `80` mapped to host port **`8095`**.
+- **Supporting Infrastructure & Persistence**:
+  - Base directory: `/var/lib/ministack/plane` (on 3.6 TB persistent XFS volume).
+  - Infrastructure compose stack: `/var/lib/ministack/plane/docker-compose.infra.yml`:
+    - **PostgreSQL 15**: Container `plane-db` on `172.17.0.1:15433` (mount: `/var/lib/ministack/plane/data/postgres`).
+    - **Valkey / Redis 7.2**: Container `plane-redis` on `172.17.0.1:6380` (mount: `/var/lib/ministack/plane/data/redis`).
+    - **RabbitMQ 3.13**: Container `plane-mq` on `172.17.0.1:5673` (mount: `/var/lib/ministack/plane/data/rabbitmq`).
+    - **MinIO Object Storage**: Container `plane-minio` on `172.17.0.1:9002` (mount: `/var/lib/ministack/plane/data/minio`, bucket: `plane-uploads`).
+- **Secrets & Configuration**:
+  - Infrastructure secrets: Stored in `/var/lib/ministack/plane/.env.infra` (`chmod 600`).
+  - Edge TLS & DNS: Managed automatically by Edge Caddy with Cloudflare credentials fetched from MiniStack Secrets Manager (`hyphu/cloudflare`).
 
 
 
