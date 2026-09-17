@@ -36,12 +36,13 @@ description: Infrastructure context, host services, and bot runtime configuratio
 - **Matrix Bots**:
   - **HyphuBot** (`matrix-ai-bot`):
     - User ID: `@hyphubot:happyloaf.com`
-    - Container: `matrix-ai-bot` (bridge network)
+    - Container: `matrix-ai-bot` (network: `matrix-hh_matrix`)
     - Source / Mounts:
-      - `/var/lib/ministack/scratch/matrix/bot` -> `/bot` (contains `.env` configs and `bot_state.json`)
-      - `/var/lib/ministack/scratch/matrix/hyphu-repo` -> `/repo` (synced Hyphu repository)
+      - `/var/lib/ministack/scratch/matrix-bot/store` -> `/matrix_store` (persistent E2EE Olm keys & conversation memory)
+      - `/var/lib/ministack/scratch/matrix-bot/repo` -> `/repo` (synced Hyphu repository)
+      - `/home/happyloaf/.gemini` -> `/root/.gemini:ro` (Google Account AntiGravity OAuth session)
     - Runtime: `python3 -m bot.main`
-    - Config file: `/bot/ai.env` (`MATRIX_HOMESERVER=http://10.0.10.181:8018`)
+    - Inference: AntiGravity LanguageServer (`http://172.17.0.1:8086`) via Google OAuth tokens (strictly zero API keys; OpenRouter permanently disabled).
   - **GitHub Reporter** (`matrix-github-reporter`):
     - User ID: `@githubbot:happyloaf.com`
     - Container: `matrix-github-reporter` (bridge network)
@@ -98,7 +99,7 @@ description: Infrastructure context, host services, and bot runtime configuratio
   - `hyphu/openrouter`: OpenRouter API key for LLM integrations.
   - `hyphu/netbox`: NetBox superuser API token, secret key, DB credentials.
   - `hyphu/duplicati`: Duplicati web/API management credentials.
-  - `hyphu/matrix/ai-bot`: Matrix user password (`@hyphubot:happyloaf.com`) & OpenRouter API key.
+  - `hyphu/matrix/ai-bot`: Matrix user password (`@hyphubot:happyloaf.com`) & AntiGravity OAuth configuration (OpenRouter disabled).
   - `hyphu/matrix/github-bot`: Matrix user password (`@githubbot:happyloaf.com`) & GitHub personal access token.
   - `hyphu/monitoring`: Gatus tokens (GitHub token, Home Assistant token, Ntfy token).
   - `hyphu/development/recovery`: Dev recovery tokens.
