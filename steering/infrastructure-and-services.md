@@ -216,5 +216,21 @@ description: Infrastructure context, host services, and bot runtime configuratio
   - State volume: `/var/lib/ministack/scratch/maid2clean/session` -> `/app/session` (persists `seen_jobs.json`, `pending_webhooks.json`, `.session.env`).
   - Secrets Management: Credentials dynamically fetched by `auth.py` from MiniStack AWS Secrets Manager (`maid2clean`), ensuring no plaintext credentials in git or manifests.
 
-
-
+## AI Router Service (AIRouter)
+- **Deployment & Orchestration**:
+  - Cluster: MiniStack ECS cluster `ai-router` (service `ai-router`, task definition `ai-router:1`).
+  - Container: `ministack-ecs-...-ai-router` (image `127.0.0.1:4566/ai/router:latest`).
+  - Endpoint: `http://172.17.0.1:8877` (container port 8080 mapped to host 8877). OpenAI-compatible `/v1/chat/completions` and `/health`.
+  - State Persistence: S3 bucket `ai-router-state` on MiniStack (`antigravity-oauth-token.json`).
+- **Routing & Lanes**:
+  - **Antigravity Lane (Primary)**: Google Cloud Code Assist via Google OAuth refresh token (`antigravity-oauth-token.json`). Uses account subscription licensing (zero per-token API charges).
+  - **OpenRouter Lane (Fallback)**: Configured via `OPENROUTER_API_KEY`. Used only on model unavailability, 5xx upstream failures, or when Antigravity quota runs out.
+  - **Model Normalization**: Strips provider prefixes (`openai:`, `google:`, `anthropic:`) so caller formats like `openai:gemini-3.1-pro` correctly resolve to internal Antigravity models (`gemini-3.1-pro-low`) rather than falling through to OpenRouter.
+- **Enhanced Logging**:
+  - Every incoming AI request logs clearly to stdout and CloudWatch/Docker logs:
+    `[AI-ROUTER] [POST] /v1/chat/completions -> model='<requested>' | upstream='<lane>' (target='<target_model>') | status=<status> | <ms>ms | tokens: in=<in> out=<out> total=<total>`
+  - Structured JSON logs are emitted via `LogSink` with `model_requested`, `model_target`, `upstream`, `prompt_tokens`, `completion_tokens`, and `total_tokens`.
+- **Matrix Quota Alerting**:
+  - Automatically triggers when AntiGravity runs out of subscription quota (HTTP 429 / `RESOURCE_EXHAUSTED` / `QuotaError`).
+  - Sends alert to Matrix room `!SrltefQnFrKsrjBcRC:happyloaf.com` tagging `@HappyLoaf` (`<a href="https://matrix.to/#/@happyloaf:happyloaf.com">@HappyLoaf</a>`) via sender `@netbot:happyloaf.com` against Synapse (`http://172.17.0.1:8018`).
+  - Alerts are asynchronously dispatched in a background daemon thread and debounced with a 15-minute cooldown (`MATRIX_ALERT_COOLDOWN_SECONDS=900`) to prevent spamming during quota cooldown.
