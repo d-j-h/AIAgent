@@ -103,6 +103,7 @@ description: Infrastructure context, host services, and bot runtime configuratio
   - `hyphu/monitoring`: Gatus tokens (GitHub token, Home Assistant token, Ntfy token).
   - `hyphu/development/recovery`: Dev recovery tokens.
   - `hyphu/cloudflare`: Cloudflare API token and `hadho.me` zone ID for automated DNS-01 ACME challenge resolution and DNS management.
+  - `hyphu/maid2clean`: Maid2Clean cleaner portal credentials (`PORTAL_USERNAME`, `PORTAL_PASSWORD`) & webhook/poll settings.
 - **Programmatic Secret Access Pattern (Python / boto3)**:
   ```python
   import json, os, boto3
@@ -201,7 +202,17 @@ description: Infrastructure context, host services, and bot runtime configuratio
   - Infrastructure secrets: Stored in `/var/lib/ministack/plane/.env.infra` (`chmod 600`).
   - Edge TLS & DNS: Managed automatically by Edge Caddy with Cloudflare credentials fetched from MiniStack Secrets Manager (`hyphu/cloudflare`).
 
-
-
+## Maid2Clean Job Watcher (`maid2clean-watcher`)
+- **Web UI & Endpoints**:
+  - Web UI: `http://10.0.10.181:8091/` (port `8090` mapped to host port `8091`).
+  - Home Assistant Webhook Target: `http://10.0.10.112:8123/api/webhook/maid2clean_jobs`.
+- **Runtime & Deployment Architecture**:
+  - Primary host: `BOLSRV09P` (`10.0.10.181`).
+  - Orchestration: MiniStack ECS cluster `hyphu-development` (service `maid2clean-watcher`, task definition `maid2clean-watcher:1`).
+  - Container Image: `127.0.0.1:4566/hyphu/maid2clean:latest` (built on Debian Bookworm).
+  - Source Repository: `/home/coder/git/maid2clean-watcher` (remote `git@github.com:d-j-h/maid2clean-watcher.git`).
+- **Persistence & Configuration**:
+  - State volume: `/var/lib/ministack/scratch/maid2clean/session` -> `/app/session` (persists `seen_jobs.json`, `pending_webhooks.json`, `.session.env`).
+  - Secrets Management: Credentials dynamically fetched by `auth.py` from MiniStack AWS Secrets Manager (`hyphu/maid2clean`), ensuring no plaintext credentials in git or manifests.
 
 
