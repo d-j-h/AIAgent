@@ -234,3 +234,21 @@ description: Infrastructure context, host services, and bot runtime configuratio
   - Automatically triggers when AntiGravity runs out of subscription quota (HTTP 429 / `RESOURCE_EXHAUSTED` / `QuotaError`).
   - Sends alert to Matrix room `!SrltefQnFrKsrjBcRC:happyloaf.com` tagging `@HappyLoaf` (`<a href="https://matrix.to/#/@happyloaf:happyloaf.com">@HappyLoaf</a>`) via sender `@netbot:happyloaf.com` against Synapse (`http://172.17.0.1:8018`).
   - Alerts are asynchronously dispatched in a background daemon thread and debounced with a 15-minute cooldown (`MATRIX_ALERT_COOLDOWN_SECONDS=900`) to prevent spamming during quota cooldown.
+- **Spending & Metrics API**:
+  - Endpoint: `GET /spending` returns structured metrics:
+    - OpenRouter: Total credits purchased, total usage to date, remaining credit balance, and active key limit details.
+    - AntiGravity: Financial cost ($0.00 subscription licensing), active status, quota health state, and total quota excursions.
+
+## Matrix AI Assistant Bot (`matrix-ai-bot`)
+- **Runtime & Deployment**:
+  - Container: `matrix-ai-bot` (image `127.0.0.1:4566/hyphu/matrix-bot:latest`).
+  - Identity: `@hyphubot:happyloaf.com` (Matrix device `MX_AIBOT_V2`).
+  - Homeserver: Synapse (`http://synapse:8008` internally, `http://172.17.0.1:8018` host).
+- **Strict AntiGravity OAuth-Only Inference**:
+  - Bot inference operates exclusively via Google OAuth (`cloudcode-oauth` / AntiGravity) with zero token-based API charges.
+  - OpenRouter API keys are stripped from bot inference routing to completely prevent unnecessary credit drain.
+- **Spending & Quota Querying**:
+  - Commands: `!spending`, `!billing`, `!credits`, `!usage`, and natural language queries ("how much have we spent on OpenRouter?", "what is our remaining balance?").
+  - Queries `AIRouter` `GET /spending` (or falls back to MiniStack Secrets Manager `hyphu/openrouter` and `https://openrouter.ai/api/v1/credits`).
+  - Delivers formatted reports showing OpenRouter credit usage/balance and AntiGravity quota health.
+
