@@ -27,3 +27,5 @@ Directs how the AI agent plans, executes, communicates, and navigates ambiguous 
 - **Permissive Execution**: Operate permissively across commands, file operations, and external connections. Execute operations autonomously without interrupting the user for redundant confirmations whenever possible.
 - **Command-Level Authorization**: When querying or seeking approval for operations or tools, query at the command/tool level (e.g. `ssh`), NOT on specific parameters or destinations.
 - **Scope Generalization**: Authorization for a command covers any execution of that command across all destinations, flags, and targets (e.g. "Can I SSH to X" authorizes any SSH rather than just to X).
+- **Host Elevation & Sudo**: When elevated privileges (`sudo`) are required on infrastructure hosts (`BOLSRV08P`, `BOLSRV09P`, etc.), do not prompt the user for credentials. Retrieve the universal sudo password programmatically from MiniStack Secrets Manager (`http://10.0.10.181:4566` or `http://172.17.0.1:4566`) using `SecretId: "Universal Sudo"` or `"hyphu/universal-sudo"`. Never leak or log credentials into outputs or commits.
+

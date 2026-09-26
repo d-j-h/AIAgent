@@ -105,6 +105,8 @@ description: Infrastructure context, host services, and bot runtime configuratio
   - `hyphu/development/recovery`: Dev recovery tokens.
   - `hyphu/cloudflare`: Cloudflare API token and `hadho.me` zone ID for automated DNS-01 ACME challenge resolution and DNS management.
   - `maid2clean`: Maid2Clean cleaner portal credentials (`PORTAL_USERNAME`, `PORTAL_PASSWORD`) & webhook/poll settings.
+  - `Universal Sudo` / `hyphu/universal-sudo`: Universal sudo password across infrastructure hosts (`BOLSRV08P`, `BOLSRV09P`, etc.). Agents retrieve this via MiniStack Secrets Manager API (`http://10.0.10.181:4566` or `http://172.17.0.1:4566`) with target `secretsmanager.GetSecretValue` and `SecretId: "Universal Sudo"`.
+
 - **Programmatic Secret Access Pattern (Python / boto3)**:
   ```python
   import json, os, boto3
@@ -202,6 +204,12 @@ description: Infrastructure context, host services, and bot runtime configuratio
 - **Secrets & Configuration**:
   - Infrastructure secrets: Stored in `/var/lib/ministack/plane/.env.infra` (`chmod 600`).
   - Edge TLS & DNS: Managed automatically by Edge Caddy with Cloudflare credentials fetched from MiniStack Secrets Manager (`hyphu/cloudflare`).
+
+
+## Home Assistant Automation Server (`home-assistant`)
+- **Server Address**: `10.0.10.112:8123`
+- **Purpose**: Core smart home and IoT automation hub managing local automations, lighting controllers (such as Zengge / MagicHome devices), and webhook integrations (e.g., `maid2clean_jobs`).
+- **Integrations**: Receives webhook payloads and interfaces with local hardware services across the `10.0.10.0/24` and `10.5.0.0/24` subnets.
 
 ## Maid2Clean Job Watcher (`maid2clean-watcher`)
 - **Web UI & Endpoints**:
