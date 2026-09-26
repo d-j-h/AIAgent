@@ -208,6 +208,12 @@ description: Infrastructure context, host services, and bot runtime configuratio
 
 ## Home Assistant Automation Server (`home-assistant`)
 - **Server Address**: `10.0.10.112:8123`
+- **Host & Architecture**: Virtual machine `BOLHOMEA01V` (Debian 11 Bullseye) running under KVM on hypervisor host `BOLSRV08P` (`10.0.10.199`).
+- **Container Architecture**: Home Assistant Supervised with core container `homeassistant` (`ghcr.io/home-assistant/qemux86-64-homeassistant`), `hassio_supervisor`, and add-on containers.
+- **Reliability & Watchdog**:
+  - Restart policy configured to `unless-stopped` (`docker update --restart unless-stopped homeassistant`) so the Docker daemon immediately auto-starts Home Assistant upon host boot.
+  - Managed by a systemd watchdog service (`/etc/systemd/system/homeassistant-watchdog.service`) and timer (`/etc/systemd/system/homeassistant-watchdog.timer`) executing `/usr/local/bin/ensure-homeassistant.sh`.
+  - The watchdog runs at boot and every 2 minutes to verify container health, auto-recover if stopped, and re-apply `unless-stopped` after Supervisor updates.
 - **Purpose**: Core smart home and IoT automation hub managing local automations, lighting controllers (such as Zengge / MagicHome devices), and webhook integrations (e.g., `maid2clean_jobs`).
 - **Integrations**: Receives webhook payloads and interfaces with local hardware services across the `10.0.10.0/24` and `10.5.0.0/24` subnets.
 
