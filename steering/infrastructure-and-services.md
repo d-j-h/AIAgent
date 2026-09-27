@@ -267,3 +267,26 @@ description: Infrastructure context, host services, and bot runtime configuratio
   - Queries `AIRouter` `GET /spending` (or falls back to MiniStack Secrets Manager `hyphu/openrouter` and `https://openrouter.ai/api/v1/credits`).
   - Delivers formatted reports showing OpenRouter credit usage/balance and AntiGravity quota health.
 
+## BOLSRV08P Media & BitTorrent Stack
+- **Host**: `BOLSRV08P` (`10.0.10.199`, Tailscale `100.67.182.20`, FQDN `bolsrv08p.srv.hadho.me` / `bolsrv08p.lan.hadho.me`).
+  - Model: HP ProLiant DL380 G6 (NetBox Device ID: 3).
+  - Storage: `/data` on 4.5TB HDD (`/dev/sdb1`, Btrfs). All container state and Docker daemon root stored under `/data`.
+- **Media Mounts & Storage Architecture**:
+  - Local Storage: `/data/media` (contains `Movie`, `TV`, `Music`).
+  - Staging Downloads: `/data/media/downloads` (mounted to `/downloads`).
+  - BOLFS01V Share: `10.0.10.106:/data` mounted to `/mnt/media` and `/mnt/media/media`.
+  - BOLNAS01P Share: `BOLNAS01P.lan.hadho.me:/Media` mounted to `/mnt/nas/media`.
+- **Services Deployed**:
+  - **Emby Media Server**:
+    - Compose path: `/data/docker/emby/docker-compose.yml`.
+    - WebUI Port: `8096` (`http://10.0.10.199:8096` / `http://bolsrv08p.srv:8096`).
+    - Reverse Proxy: `https://emby.hadho.me` (via Edge Caddy on `BOLVM01P`).
+    - NetBox Service ID: `68`.
+  - **qBittorrent & Tailscale Sidecar**:
+    - Compose path: `/data/docker/qbittorrent/docker-compose.yml`.
+    - WebUI Port: `8082` (`http://10.0.10.199:8082` / `http://bolsrv08p.srv:8082`).
+    - Tailscale Remote Access: Container `qbittorrent-tailscale` joins Tailnet as node `qbittorrent` (`qbittorrent.tail09c464.ts.net:8082`).
+    - BitTorrent Ingress: Port `6881` (TCP/UDP).
+    - NetBox Service ID: `67`.
+
+
