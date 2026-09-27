@@ -214,6 +214,7 @@ description: Infrastructure context, host services, and bot runtime configuratio
   - Restart policy configured to `unless-stopped` (`docker update --restart unless-stopped homeassistant`) so the Docker daemon immediately auto-starts Home Assistant upon host boot.
   - Managed by a systemd watchdog service (`/etc/systemd/system/homeassistant-watchdog.service`) and timer (`/etc/systemd/system/homeassistant-watchdog.timer`) executing `/usr/local/bin/ensure-homeassistant.sh`.
   - The watchdog runs at boot and every 2 minutes to verify container health, auto-recover if stopped, and re-apply `unless-stopped` after Supervisor updates.
+  - **Hypervisor Bridge Forwarding**: On hypervisor `BOLSRV08P`, Docker's default `-P FORWARD DROP` policy combined with kernel `br_netfilter` can drop bridged VM traffic across `br0`. This is prevented by `/etc/sysctl.d/99-bridge.conf` (`net.bridge.bridge-nf-call-iptables = 0`) and systemd unit `bridge-forward-rules.service` ensuring `-i br0 -o br0 -j ACCEPT`.
 - **Purpose**: Core smart home and IoT automation hub managing local automations, lighting controllers (such as Zengge / MagicHome devices), and webhook integrations (e.g., `maid2clean_jobs`).
 - **Integrations**: Receives webhook payloads and interfaces with local hardware services across the `10.0.10.0/24` and `10.5.0.0/24` subnets.
 
